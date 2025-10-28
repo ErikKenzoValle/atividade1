@@ -8,7 +8,7 @@ public class Receptor {
     public static final int PORTA = 12345;
 
     public static void main(String[] args) {
-        System.out.println("[Receptor] Servidor Receptor iniciado. Aguardando conexões na porta " + PORTA + "...");
+        System.out.println("[R] Servidor Receptor iniciado. Aguardando conexões na porta " + PORTA + "...");
 
         try (ServerSocket serverSocket = new ServerSocket(PORTA)) {
             while (true) {
@@ -18,7 +18,7 @@ public class Receptor {
 
                 try {
                     clienteSocket = serverSocket.accept();
-                    System.out.println("[Receptor] Cliente conectado: " + clienteSocket.getInetAddress().getHostAddress());
+                    System.out.println("[R] Cliente conectado: " + clienteSocket.getInetAddress().getHostAddress());
 
                     transmissor = new ObjectOutputStream(clienteSocket.getOutputStream());
                     receptor = new ObjectInputStream(clienteSocket.getInputStream());
@@ -28,38 +28,38 @@ public class Receptor {
 
                         if (objRecebido instanceof Pedido) {
                             Pedido pedido = (Pedido) objRecebido;
-                            System.out.println("[Receptor] Pedido recebido para contar o número: " + pedido.getProcurado());
+                            System.out.println("[R] Pedido recebido para contar o número: " + pedido.getProcurado());
 
                             int contagem = processarPedidoParalelo(pedido);
 
                             Resposta resposta = new Resposta(contagem);
                             transmissor.writeObject(resposta);
                             transmissor.flush();
-                            System.out.println("[Receptor] Resposta enviada: " + contagem);
+                            System.out.println("[R] Resposta enviada: " + contagem);
 
                         } else if (objRecebido instanceof ComunicadoEncerramento) {
-                            System.out.println("[Receptor] Cliente " + clienteSocket.getInetAddress().getHostAddress() + " encerrou a conexão.");
+                            System.out.println("[R] Cliente " + clienteSocket.getInetAddress().getHostAddress() + " encerrou a conexão.");
                             break;
                         }
                     }
 
                 } catch (EOFException e) {
-                    System.out.println("[Receptor] Cliente desconectado inesperadamente.");
+                    System.out.println("[R] Cliente desconectado inesperadamente.");
                 } catch (IOException | ClassNotFoundException e) {
-                    System.err.println("[Receptor] Erro durante a comunicação: " + e.getMessage());
+                    System.err.println("[R] Erro durante a comunicação: " + e.getMessage());
                 } finally {
                     try {
                         if (receptor != null) receptor.close();
                         if (transmissor != null) transmissor.close();
                         if (clienteSocket != null) clienteSocket.close();
                     } catch (IOException e) {
-                        System.err.println("[Receptor] Erro ao fechar recursos: " + e.getMessage());
+                        System.err.println("[R] Erro ao fechar recursos: " + e.getMessage());
                     }
-                    System.out.println("\n[Receptor] Aguardando nova conexão...");
+                    System.out.println("\n[R] Aguardando nova conexão...");
                 }
             }
         } catch (IOException e) {
-            System.err.println("[Receptor] Erro ao iniciar o servidor: " + e.getMessage());
+            System.err.println("[R] Erro ao iniciar o servidor: " + e.getMessage());
         }
     }
 
@@ -75,7 +75,7 @@ public class Receptor {
         }
 
         if (quantidade == 0) {
-            quantidade = 1; // Garantir ao menos uma thread
+            quantidade = 1;
         }
 
         List<ContagemThread> threads = new ArrayList<>();
@@ -85,7 +85,7 @@ public class Receptor {
             int inicio = i * tamanhoChunk;
             int fim = Math.min(inicio + tamanhoChunk, numeros.length);
 
-            if (inicio >= fim) break; // Evitar chunks vazios se a divisão for estranha
+            if (inicio >= fim) break; // evita chunks vazios
 
             byte[] chunk = Arrays.copyOfRange(numeros, inicio, fim);
             ContagemThread t = new ContagemThread(chunk, procurado);
@@ -99,7 +99,7 @@ public class Receptor {
                 contagemTotal += t.getResultadoParcial();
             }
         } catch (InterruptedException e) {
-            System.err.println("[Receptor] Thread de contagem interrompida: " + e.getMessage());
+            System.err.println("[R] Thread de contagem interrompida: " + e.getMessage());
         }
 
         return contagemTotal;
